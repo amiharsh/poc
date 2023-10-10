@@ -1,0 +1,13 @@
+additionalPrometheusRulesMap:
+  custom-rule:
+    groups:
+    - name: pod_group
+      rules:
+      - alert: CustomPodCrashLoopBackOff 
+        expr: kube_pod_container_status_restarts_total{namespace="default", pod="pod1"} > 5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is in CrashLoopBackOff state"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is in CrashLoopBackOff state for more than 1 minutes."
