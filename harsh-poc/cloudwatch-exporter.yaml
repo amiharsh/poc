@@ -1,0 +1,20 @@
+aws:
+  aws_access_key_id: 
+  aws_secret_access_key: 
+
+config: |-
+  region: us-west-1
+  period_seconds: 300
+  metrics:
+  - aws_namespace: AWS/EC2
+    aws_metric_name: CPUUtilization 
+    aws_dimensions: [InstanceId]
+    aws_statistics: [Average]
+  - aws_namespace: AWS/EC2
+    aws_metric_name: NetworkOut
+    aws_dimensions: [InstanceId]
+    aws_statistics: [Sum]
+  - aws_namespace: AWS/EC2
+    aws_metric_name: NetworkIn
+    aws_dimensions: [InstanceId]
+    aws_statistics: [Sum]
