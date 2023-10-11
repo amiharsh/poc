@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: flask-alertmanager-config
+  labels:
+    alertmanagerConfig: flask-alert-config
+  namespace: monitoring
+spec:
+  route:
+    receiver: "email-delvex"  # Specify a valid receiver for the root route
+    routes:
+      - receiver: 'email-delvex'
+        continue: true
+        match:
+          alertname: StressPodHighCPUUsage
+      - receiver: "msteams"
+        match:
+          alertname: CustomPodCrashLoopBackOff
+        continue: true
+  receivers:
+    - name: "msteams"
+      webhookConfigs:
+        - url: "http://prometheus-msteams.monitoring.svc.cluster.local:2000/delvex"
+          sendResolved: true
+    - name: "email-delvex"
+      emailConfigs:
+        - to: 'harsh1213012001@gmail.com'
+          from: 'delvexcommunity@gmail.com'
+          authUsername: 'delvexcommunity@gmail.com'
+          authPassword:
+            key: alertmanager-auth-password
+            name: alertmanager-secret
+          smarthost: 'smtp.gmail.com:587'
+          requireTLS: true
+          sendResolved: true
+

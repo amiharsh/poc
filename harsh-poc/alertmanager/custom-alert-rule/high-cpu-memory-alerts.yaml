@@ -1,0 +1,59 @@
+additionalPrometheusRulesMap:
+  custom-rule:
+    groups:
+    - name: pod_group
+      rules:
+      - alert: CustomPodHighCPUUsage
+        expr: sum(rate(container_cpu_usage_seconds_total{namespace="default", pod="stress-pod"}[5m])) by (namespace, pod) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is experiencing high CPU usage"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is experiencing high CPU usage for more than 5 minutes."
+
+      - alert: CustomPodMemoryPressure
+        expr: (sum(container_memory_working_set_bytes{namespace="default", pod="stress-pod"}) / sum(container_spec_memory_limit_bytes{namespace="default", pod="stress-pod"})) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is under memory pressure"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is using more than 90% of its memory limit for more than 5 minutes."
+alertmanager:
+  config:
+    route:
+      group_by: ['alertname', 'priority']
+      group_wait: 10s
+      group_interval: 1m
+      routes:
+      - match:
+          alertname: Watchdog
+        receiver: 'null' 
+      - receiver: 'email-harsh'
+        continue: true
+        match:
+          alertname: CustomPodHighCPUUsage 
+      - receiver: "msteams"
+        match: 
+          alertname: CustomPodHighCPUUsage 
+        continue: true
+      - receiver: "msteams"
+        continue: true
+        match:
+          alertname: KubeSchedulerDown
+    receivers:
+      - name: "null"
+      - name: "msteams"
+        webhook_configs:
+        - url: "http://prometheus-msteams.monitoring.svc.cluster.local:2000/delvex"
+          send_resolved: true
+      - name: "email-harsh"
+        email_configs:
+        - to: 'harsh1213012001@gmail.com'
+          from: 'delvexcommunity@gmail.com'
+          auth_username: 'delvexcommunity@gmail.com'
+          auth_password: 'wcpkasbimqazdtks'
+          smarthost: 'smtp.gmail.com:587'
+          require_tls: true
+          send_resolved: true
